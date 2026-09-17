@@ -3,6 +3,18 @@ import { useStore } from "@/lib/store"
 import { AUTHENTICATED_USER_NOT_LINKED } from "@/lib/db"
 import { signOutActiveDatabase } from "@/hooks/use-database-auth"
 
+export function isSupabaseConnectionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "")
+  const normalized = message.toLocaleLowerCase()
+  return normalized.includes("could not reach the supabase project")
+    || normalized.includes("failed to fetch")
+    || normalized.includes("network")
+    || normalized.includes("offline")
+    || normalized.includes("connection")
+    || normalized.includes("econnrefused")
+    || normalized.includes("timed out")
+}
+
 export function useAppBootstrap(enabled = true) {
   const ready = useStore((s: { ready: boolean }) => s.ready)
   const bootstrap = useStore((s: { bootstrap: () => Promise<void> }) => s.bootstrap)
@@ -17,6 +29,13 @@ export function useAppBootstrap(enabled = true) {
           await signOutActiveDatabase()
           setError(null)
           return
+        }
+        if (isSupabaseConnectionError(e)) {
+          try {
+            await signOutActiveDatabase({ localOnly: true })
+          } catch (signOutError) {
+            console.error("Could not clear the Supabase session after a connection failure:", signOutError)
+          }
         }
         setError(e instanceof Error ? e.message : "Failed to initialize database")
       })

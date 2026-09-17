@@ -5,11 +5,13 @@ import type { AppProps } from "./App.tsx"
 import { useDatabaseAuth } from "@/hooks/use-database-auth"
 import { AuthScreen } from "@/components/auth-screen"
 import { useSupabaseSync } from "@/hooks/use-supabase-sync"
+import { signOutActiveDatabase } from "@/hooks/use-database-auth"
 import { translations } from "@/lib/i18n/translations"
 import { FirstRunSetupScreen } from "@/components/first-run-setup-screen"
 import { configureSupabaseClient } from "@/lib/supabase/client"
 import { configureDatabaseProvider } from "@/lib/database-runtime"
 import type { DatabaseProvider, StorageBootstrapState } from "@/lib/database-provider"
+import { Button } from "@/components/ui/button"
 
 type Language = "en" | "ar"
 
@@ -45,6 +47,7 @@ export function AppRoot() {
     const [storageLoading, setStorageLoading] = useState(true)
     const [storage, setStorage] = useState<StorageBootstrapState | null>(null)
     const [storageError, setStorageError] = useState<string | null>(null)
+    const [clearingStorage, setClearingStorage] = useState(false)
 
     useEffect(() => {
         let active = true
@@ -80,7 +83,29 @@ export function AppRoot() {
 
     if (storageLoading) return <BootLoading />
     if (storageError) {
-        return <div className="flex h-screen items-center justify-center p-6"><p className="max-w-lg text-center text-sm text-destructive">{storageError}</p></div>
+        const clearStoredProvider = async () => {
+            if (clearingStorage) return
+            setClearingStorage(true)
+            setStorageError(null)
+            try {
+                const response = await window.electronAPI?.storage.returnToSetup()
+                if (!response?.success) throw new Error(response?.error ?? "Could not clear the saved Supabase session")
+                window.location.reload()
+            } catch (error) {
+                setStorageError(error instanceof Error ? error.message : "Could not clear the saved Supabase session")
+                setClearingStorage(false)
+            }
+        }
+        return (
+            <div className="flex h-screen items-center justify-center p-6">
+                <div className="max-w-lg space-y-4 text-center">
+                    <p className="text-sm text-destructive">{storageError}</p>
+                    <Button type="button" onClick={() => { void clearStoredProvider() }} disabled={clearingStorage}>
+                        {clearingStorage ? "Signing out…" : "Sign out and return to setup"}
+                    </Button>
+                </div>
+            </div>
+        )
     }
     if (!storage?.config) return <FirstRunSetupScreen state={storage ?? { config: null, configError: null, legacySqliteDatabaseFound: false, supabaseConnectionFound: false }} />
     return <ConnectedAppRoot provider={storage.config.databaseProvider} />
@@ -99,6 +124,8 @@ function BootLoading() {
 
 function ConnectedAppRoot({ provider }: { provider: DatabaseProvider }) {
     const [modules, setModules] = useState<LoadedModules | null>(null)
+    const [signingOut, setSigningOut] = useState(false)
+    const [signOutError, setSignOutError] = useState<string | null>(null)
     const auth = useDatabaseAuth()
     const { ready, error } = useAppBootstrap(!auth.loading && auth.session !== null)
     useSupabaseSync(provider === "supabase" && ready && auth.session !== null)
@@ -112,6 +139,18 @@ function ConnectedAppRoot({ provider }: { provider: DatabaseProvider }) {
         const response = await window.electronAPI?.storage.returnToSetup()
         if (!response?.success) throw new Error(response?.error ?? t("auth.databaseSetupReturnFailed"))
         window.location.reload()
+    }
+    const signOutFromConnectionError = async () => {
+        if (signingOut) return
+        setSigningOut(true)
+        setSignOutError(null)
+        try {
+            await signOutActiveDatabase({ localOnly: true })
+            window.location.reload()
+        } catch (caught) {
+            setSigningOut(false)
+            setSignOutError(caught instanceof Error ? caught.message : t("auth.signOutFailed"))
+        }
     }
 
     useEffect(() => {
@@ -147,7 +186,7 @@ function ConnectedAppRoot({ provider }: { provider: DatabaseProvider }) {
         return (
             <AuthScreen
                 lang={lang}
-                error={auth.error}
+                error={error ?? auth.error}
                 onResolve={auth.resolveAccount}
                 onSignIn={auth.signIn}
                 onCompleteFirstLogin={auth.completeFirstLogin}
@@ -160,10 +199,14 @@ function ConnectedAppRoot({ provider }: { provider: DatabaseProvider }) {
 
     if (error) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="text-center space-y-2">
+            <div className="flex h-screen items-center justify-center p-6">
+                <div className="space-y-4 text-center">
                     <p className="text-destructive font-medium">{t("app.databaseInitFailed")}</p>
                     <p className="text-muted-foreground text-sm">{error}</p>
+                    <Button type="button" onClick={() => { void signOutFromConnectionError() }} disabled={signingOut}>
+                        {signingOut ? t("auth.signingOut") : t("auth.signOutAndReturn")}
+                    </Button>
+                    {signOutError && <p className="text-destructive text-sm">{signOutError}</p>}
                 </div>
             </div>
         )

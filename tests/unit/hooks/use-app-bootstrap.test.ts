@@ -67,4 +67,18 @@ describe("useAppBootstrap", () => {
     })
     expect(result.current.error).toBeNull()
   })
+
+  it("signs out and reports Supabase connection failures", async () => {
+    useStore.setState({
+      ready: false,
+      bootstrap: vi.fn().mockRejectedValue(new Error("Could not reach the Supabase project. Check the URL and internet connection.")),
+    })
+
+    const { result } = renderHook(() => useAppBootstrap())
+
+    await waitFor(() => {
+      expect(signOut).toHaveBeenCalledWith({ localOnly: true })
+      expect(result.current.error).toContain("Could not reach the Supabase project")
+    })
+  })
 })

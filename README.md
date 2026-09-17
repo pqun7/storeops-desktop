@@ -242,7 +242,7 @@ The database trigger serializes the first user insertion and forces that user to
 
 ### Add demonstration data
 
-`seed-db` adds a compact, internally consistent dataset: master data, locations, one completed shipment, serialized weapons, ammunition, accessories, retail and wholesale customers, one invoice, and a partial payment.
+`seed-db` seeds the local SQLite database with the built-in demo dataset and a local administrator account. It does not connect to Supabase. Use `seed-supabase-db` only when you explicitly want to seed a Supabase project.
 
 If `reset-db` already created the primary Admin, the seed command reuses it. Otherwise configure a demo login in `.env.local`:
 
@@ -258,6 +258,30 @@ Then preview and seed:
 npm run seed-db
 npm run seed-db -- --confirm
 ```
+
+The local seed command uses `demo.admin` / `Demo1234!` by default. Override them with
+`--admin-username=... --admin-password=...` or the corresponding `SEED_ADMIN_*`
+environment variables. The previous PostgreSQL seed remains available as:
+
+
+```bash
+npm run seed-db -- --confirm --admin-username=myadmin --admin-password=MyPassword123
+```
+
+```bash
+npm run seed-supabase-db -- --confirm
+```
+
+If the desktop application is stuck on a Supabase connection error, close the
+application and run this offline-safe local logout command:
+
+```bash
+npm run logout-supabase
+```
+
+It removes the saved local Supabase session and provider selection without
+contacting Supabase, then the next application start opens the provider setup.
+
 
 The command refuses to run over existing business data. To return to a clean system, run `reset-db` again; do not use demo data in production.
 
