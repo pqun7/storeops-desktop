@@ -33,7 +33,16 @@ export interface StorageBootstrapState {
   config: AppStorageConfig | null
   configError: string | null
   legacySqliteDatabaseFound: boolean
+  availableLocalDatabases: LocalDatabaseCandidate[]
   supabaseConnectionFound: boolean
+}
+
+export interface LocalDatabaseCandidate {
+  id: string
+  label: string
+  path: string
+  accountCount: number
+  storeName: string | null
 }
 
 export interface InitializeSqliteInput {
@@ -48,6 +57,10 @@ export interface InitializeSqliteResult {
   health: DatabaseHealthResult
   databasePath: string
   adminIdentifier: string
+}
+
+export interface ActivateExistingSqliteResult extends InitializeSqliteResult {
+  accountCount: number
 }
 
 export interface ActivateSupabaseResult {

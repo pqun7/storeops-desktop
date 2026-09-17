@@ -55,7 +55,7 @@ export function AppRoot() {
             try {
                 const bootstrap = window.electronAPI?.storage
                     ? await window.electronAPI.storage.getBootstrap()
-                    : { success: true, data: { config: null, configError: null, legacySqliteDatabaseFound: false, supabaseConnectionFound: false } satisfies StorageBootstrapState }
+                    : { success: true, data: { config: null, configError: null, legacySqliteDatabaseFound: false, availableLocalDatabases: [], supabaseConnectionFound: false } satisfies StorageBootstrapState }
                 if (!bootstrap.success || !bootstrap.data) throw new Error(bootstrap.error ?? "Could not read the storage configuration")
                 if (active) setStorage(bootstrap.data)
                 if (!bootstrap.data.config) return
@@ -107,7 +107,7 @@ export function AppRoot() {
             </div>
         )
     }
-    if (!storage?.config) return <FirstRunSetupScreen state={storage ?? { config: null, configError: null, legacySqliteDatabaseFound: false, supabaseConnectionFound: false }} />
+    if (!storage?.config) return <FirstRunSetupScreen state={storage ?? { config: null, configError: null, legacySqliteDatabaseFound: false, availableLocalDatabases: [], supabaseConnectionFound: false }} />
     return <ConnectedAppRoot provider={storage.config.databaseProvider} />
 }
 

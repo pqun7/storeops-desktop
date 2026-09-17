@@ -6,6 +6,7 @@ import {
   initializeSelectedProvider,
   returnToStorageSetup,
   setupSqliteProvider,
+  activateExistingSqliteProvider,
 } from "../services/database-provider-manager.js"
 import { readStorageConfig } from "../services/storage-config-service.js"
 import {
@@ -116,7 +117,7 @@ function requireSqliteSelected(): void {
 
 export function registerStorageHandlers(): void {
   for (const channel of [
-    "storage:get-bootstrap", "storage:initialize-selected", "storage:return-to-setup", "storage:setup-sqlite", "storage:activate-supabase",
+    "storage:get-bootstrap", "storage:initialize-selected", "storage:return-to-setup", "storage:setup-sqlite", "storage:activate-existing-sqlite", "storage:activate-supabase",
     "local-auth:get-session", "local-auth:resolve", "local-auth:sign-in", "local-auth:claim", "local-auth:sign-out",
     "local-auth:update-password", "database:invoke", "account:export-login-guide",
     "auth-storage:get", "auth-storage:set", "auth-storage:remove",
@@ -131,6 +132,12 @@ export function registerStorageHandlers(): void {
     const validated = sqliteSetupSchema.parse(input)
     return setupSqliteProvider(validated, (stage: StorageSetupProgressStage) => {
       if (!event.sender.isDestroyed()) event.sender.send("storage:setup-progress", stage)
+    })
+  }))
+  ipcMain.handle("storage:activate-existing-sqlite", (event, input: unknown) => asyncResult(() => {
+    const parsed = z.object({ databasePath: z.string().trim().min(1).max(500) }).strict().parse(input)
+    return activateExistingSqliteProvider(parsed.databasePath, (stage: StorageSetupProgressStage) => {
+    if (!event.sender.isDestroyed()) event.sender.send("storage:setup-progress", stage)
     })
   }))
   ipcMain.handle("storage:activate-supabase", () => asyncResult(activateSupabaseProvider))

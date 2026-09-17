@@ -2,8 +2,11 @@ import {
   closeDatabase,
   databaseExists,
   databaseHealthCheck,
+  getDb,
   getDbPath,
   initDatabase,
+  listAvailableLocalDatabases,
+  selectLocalDatabase,
 } from "../database.js"
 import {
   clearStorageConfig,
@@ -27,6 +30,7 @@ import type {
   DatabaseHealthResult,
   InitializeSqliteInput,
   InitializeSqliteResult,
+  ActivateExistingSqliteResult,
   StorageBootstrapState,
   StorageSetupProgressStage,
 } from "../../src/lib/database-provider.js"
@@ -46,6 +50,7 @@ export function getStorageBootstrapState(): StorageBootstrapState {
     config: stored.config,
     configError: stored.error,
     legacySqliteDatabaseFound: databaseExists(),
+    availableLocalDatabases: listAvailableLocalDatabases(),
     supabaseConnectionFound: supabaseConnection !== null,
   }
 }
@@ -105,6 +110,55 @@ export function setupSqliteProvider(
         health,
         databasePath: getDbPath(),
         adminIdentifier: administrator.identifier,
+      }
+
+    } catch (error) {
+      closeLocalAuth()
+      closeDatabase()
+      throw error
+    }
+  })
+}
+
+export function activateExistingSqliteProvider(
+  databasePath: string,
+  onProgress: (stage: StorageSetupProgressStage) => void,
+): Promise<ActivateExistingSqliteResult> {
+  return exclusiveSetup(async () => {
+    try {
+      onProgress("opening-database")
+      selectLocalDatabase(databasePath)
+      await initDatabase()
+      onProgress("checking-integrity")
+      const database = getDb()
+      const account = database.prepare(`
+        SELECT username
+        FROM users
+        WHERE is_active = 1 AND password_set = 1
+          AND password_hash LIKE 'scrypt-v1$%'
+        ORDER BY is_primary_admin DESC, id
+        LIMIT 1
+      `).get() as { username: string } | undefined
+      const accountCount = Number((database.prepare(`
+        SELECT count(*) AS count
+        FROM users
+        WHERE is_active = 1 AND password_set = 1
+          AND password_hash LIKE 'scrypt-v1$%'
+      `).get() as { count: number }).count)
+      if (!account || accountCount === 0) {
+        throw new Error("No active local account with a usable password was found in this SQLite database")
+      }
+      onProgress("testing-read-write")
+      const health = databaseHealthCheck(true)
+      onProgress("saving")
+      const config = createStorageConfig("sqlite")
+      writeStorageConfig(config)
+      return {
+        config,
+        health,
+        databasePath: getDbPath(),
+        adminIdentifier: account.username,
+        accountCount,
       }
     } catch (error) {
       closeLocalAuth()

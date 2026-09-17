@@ -5,6 +5,7 @@ import electron from "electron"
 import fs from "node:fs"
 import { randomUUID } from "node:crypto"
 import type { DatabaseHealthResult } from "../src/lib/database-provider.js"
+import type { LocalDatabaseCandidate } from "../src/lib/database-provider.js"
 
 import {
   CREATE_TABLES_SQL,
@@ -78,6 +79,56 @@ export function getDbPath(): string {
 
 export function getExpectedDbPath(): string {
   return databasePathOverride ?? path.join(electronApp.getPath("userData"), "db", DB_FILE_NAME)
+}
+
+export function listAvailableLocalDatabases(): LocalDatabaseCandidate[] {
+  const candidates = new Set<string>()
+  const appData = electronApp.getPath("appData")
+  const roots = [electronApp.getPath("userData")]
+  if (fs.existsSync(appData)) {
+    for (const entry of fs.readdirSync(appData, { withFileTypes: true })) {
+      if (entry.isDirectory()) roots.push(path.join(appData, entry.name))
+    }
+  }
+  for (const root of roots) {
+    const candidate = path.join(root, "db", DB_FILE_NAME)
+    if (fs.existsSync(candidate)) candidates.add(path.resolve(candidate))
+  }
+  const result: LocalDatabaseCandidate[] = []
+  for (const candidate of candidates) {
+    try {
+      const probe = new Database(candidate, { readonly: true })
+      const tables = probe.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('users', 'app_installation')").all() as Array<{ name: string }>
+      if (!tables.some((table) => table.name === "users")) {
+        probe.close()
+        continue
+      }
+      const accountCount = Number((probe.prepare("SELECT count(*) AS count FROM users WHERE is_active = 1 AND password_set = 1 AND password_hash LIKE 'scrypt-v1$%'").get() as { count: number }).count)
+      const store = tables.some((table) => table.name === "app_installation")
+        ? (probe.prepare("SELECT store_name FROM app_installation WHERE singleton = 1").get() as { store_name: string } | undefined)?.store_name || null
+        : null
+      probe.close()
+      result.push({
+        id: candidate,
+        label: path.basename(path.dirname(path.dirname(candidate))),
+        path: candidate,
+        accountCount,
+        storeName: store,
+      })
+    } catch {
+      // Ignore unrelated or damaged SQLite files while building the picker.
+    }
+  }
+  return result.sort((a, b) => a.label.localeCompare(b.label))
+}
+
+export function selectLocalDatabase(databasePath: string): void {
+  const selected = path.resolve(databasePath)
+  if (!listAvailableLocalDatabases().some((candidate) => candidate.path === selected)) {
+    throw new Error("The selected local database is not available")
+  }
+  if (db) throw new Error("Close the current database before selecting another local database")
+  databasePathOverride = selected
 }
 
 export function setDatabasePathForTests(filename: string | null): void {

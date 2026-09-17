@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import type { StorageBootstrapState, StorageSetupProgressStage } from "@/lib/database-provider"
+import type { LocalDatabaseCandidate, StorageBootstrapState, StorageSetupProgressStage } from "@/lib/database-provider"
 import type { StoreSetupProgressStage } from "@/lib/store-connection"
 
 type Language = "ar" | "en"
@@ -109,7 +109,7 @@ export function FirstRunSetupScreen({ state }: { state: StorageBootstrapState })
           </div>
         )}
 
-        {choice === "sqlite" && <SqliteSetup language={language} working={working} legacyFound={state.legacySqliteDatabaseFound} onBack={() => setChoice(null)} onRun={run} />}
+        {choice === "sqlite" && <SqliteSetup language={language} working={working} legacyFound={state.legacySqliteDatabaseFound} databases={state.availableLocalDatabases} onBack={() => setChoice(null)} onRun={run} />}
         {choice === "supabase" && <SupabaseSetup language={language} working={working} connectionFound={state.supabaseConnectionFound} onBack={() => setChoice(null)} onRun={run} />}
       </div>
     </main>
@@ -120,13 +120,20 @@ function ProviderCard({ icon, title, description, items, badge, action, onClick 
   return <Card className="flex h-full flex-col"><CardHeader><div className="mb-2 text-primary">{icon}</div><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></CardHeader><CardContent className="flex flex-1 flex-col gap-4"><ul className="list-disc space-y-1 ps-5 text-sm text-muted-foreground">{items.map((item) => <li key={item}>{item}</li>)}</ul>{badge && <Alert className="border-emerald-600/30 bg-emerald-500/5"><CheckCircle2 className="text-emerald-600" /><AlertDescription>{badge}</AlertDescription></Alert>}<Button className="mt-auto" onClick={onClick}>{action}</Button></CardContent></Card>
 }
 
-function SqliteSetup({ language, working, legacyFound, onBack, onRun }: { language: Language; working: boolean; legacyFound: boolean; onBack: () => void; onRun: (operation: () => Promise<void>) => void }) {
+function SqliteSetup({ language, working, legacyFound, databases, onBack, onRun }: { language: Language; working: boolean; legacyFound: boolean; databases: LocalDatabaseCandidate[]; onBack: () => void; onRun: (operation: () => Promise<void>) => void }) {
   const rtl = language === "ar"
   const [storeName, setStoreName] = useState("")
   const [adminName, setAdminName] = useState("")
   const [adminUsername, setAdminUsername] = useState("admin")
   const [adminPassword, setAdminPassword] = useState("")
   const [confirmation, setConfirmation] = useState("")
+  const [selectedDatabase, setSelectedDatabase] = useState(databases[0]?.path ?? "")
+  const openExisting = () => onRun(async () => {
+    if (!selectedDatabase) throw new Error(rtl ? "لا توجد قاعدة SQLite متاحة للاختيار" : "No local SQLite database is available to select")
+    const response = await window.electronAPI?.storage.activateExistingSqlite(selectedDatabase)
+    if (!response?.success) throw new Error(response?.error ?? (rtl ? "تعذر فتح قاعدة SQLite الموجودة" : "Could not open the existing SQLite database"))
+    window.location.reload()
+  })
   const submit = (event: FormEvent) => {
     event.preventDefault()
     onRun(async () => {
@@ -136,7 +143,7 @@ function SqliteSetup({ language, working, legacyFound, onBack, onRun }: { langua
       window.location.reload()
     })
   }
-  return <Card><CardHeader><CardTitle className="flex items-center gap-2"><HardDrive className="size-5" />{rtl ? "تهيئة SQLite المحلية" : "Configure local SQLite"}</CardTitle><CardDescription>{legacyFound ? (rtl ? "ستُفتح القاعدة السابقة في مكانها، وستُنشأ نسخة احتياطية قبل أي ترحيل مطلوب." : "The existing database will be opened in place and backed up before required migrations.") : (rtl ? "ستُنشأ القاعدة داخل مجلد بيانات التطبيق، وليس داخل مجلد التثبيت." : "The database will be created in the application data directory, not the installation folder.")}</CardDescription></CardHeader><CardContent><form className="grid gap-4" onSubmit={submit}><Field label={rtl ? "اسم المتجر" : "Store name"}><Input required maxLength={120} value={storeName} onChange={(event) => setStoreName(event.target.value)} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label={rtl ? "اسم المدير" : "Administrator name"}><Input required maxLength={120} placeholder={rtl ? "احمد" : "Ahmed"} value={adminName} onChange={(event) => setAdminName(event.target.value)} /></Field><Field label={rtl ? "اسم حساب المدير" : "Administrator account"}><Input required dir="ltr" maxLength={80} value={adminUsername} onChange={(event) => setAdminUsername(event.target.value)} /></Field><Field label={rtl ? "كلمة المرور" : "Password"}><PasswordInput required autoComplete="new-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} /></Field><Field label={rtl ? "تأكيد كلمة المرور" : "Confirm password"}><PasswordInput required autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></Field></div><p className="text-xs text-muted-foreground">{rtl ? "8 أحرف على الأقل، مع حرف كبير وصغير ورقم. تُحفظ مشتقة مشفرة ولا تُحفظ كلمة المرور نفسها." : "Use at least 8 characters with upper-case, lower-case, and a number. Only a hardened hash is stored."}</p><div className="flex gap-2"><Button type="button" variant="outline" disabled={working} onClick={onBack}>{rtl ? "رجوع" : "Back"}</Button><Button disabled={working}>{rtl ? "تهيئة واختبار SQLite" : "Initialize and test SQLite"}</Button></div></form></CardContent></Card>
+  return <Card><CardHeader><CardTitle className="flex items-center gap-2"><HardDrive className="size-5" />{rtl ? "تهيئة SQLite المحلية" : "Configure local SQLite"}</CardTitle><CardDescription>{legacyFound ? (rtl ? "اختر قاعدة البيانات التي تحتوي على حساباتك، أو أنشئ مديرًا جديدًا." : "Choose the database that contains your accounts, or configure a new administrator.") : (rtl ? "ستُنشأ القاعدة داخل مجلد بيانات التطبيق، وليس داخل مجلد التثبيت." : "The database will be created in the application data directory, not the installation folder.")}</CardDescription></CardHeader><CardContent className="grid gap-4">{legacyFound && <div className="rounded-md border border-emerald-600/30 bg-emerald-500/5 p-3"><p className="text-sm">{rtl ? "سيتم الحفاظ على جميع البيانات والحسابات المحلية كما هي." : "All local data and accounts will be preserved as they are."}</p>{databases.length > 0 && <div className="mt-3 grid gap-2"><Label htmlFor="sqlite-database">{rtl ? "قاعدة البيانات المتاحة" : "Available local database"}</Label><select id="sqlite-database" className="h-10 rounded-md border bg-background px-3 text-sm" value={selectedDatabase} onChange={(event) => setSelectedDatabase(event.target.value)}>{databases.map((database) => <option key={database.id} value={database.path}>{database.storeName || database.label} — {database.accountCount} {rtl ? "حساب" : "account(s)"}</option>)}</select><p className="text-xs text-muted-foreground" dir="ltr">{selectedDatabase}</p></div>}<Button type="button" className="mt-3" variant="secondary" disabled={working || !selectedDatabase} onClick={openExisting}>{rtl ? "فتح القاعدة وتسجيل الدخول بالحساب الموجود" : "Open database and sign in with an existing account"}</Button></div>}<form className="grid gap-4" onSubmit={submit}><Field label={rtl ? "اسم المتجر" : "Store name"}><Input required maxLength={120} value={storeName} onChange={(event) => setStoreName(event.target.value)} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label={rtl ? "اسم المدير" : "Administrator name"}><Input required maxLength={120} placeholder={rtl ? "احمد" : "Ahmed"} value={adminName} onChange={(event) => setAdminName(event.target.value)} /><p className="text-xs text-muted-foreground">{rtl ? "استخدم هذا فقط إذا أردت تهيئة مدير جديد." : "Use this only when you want to configure a new administrator."}</p></Field><Field label={rtl ? "اسم حساب المدير" : "Administrator account"}><Input required dir="ltr" maxLength={80} value={adminUsername} onChange={(event) => setAdminUsername(event.target.value)} /></Field><Field label={rtl ? "كلمة المرور" : "Password"}><PasswordInput required autoComplete="new-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} /></Field><Field label={rtl ? "تأكيد كلمة المرور" : "Confirm password"}><PasswordInput required autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></Field></div><p className="text-xs text-muted-foreground">{rtl ? "8 أحرف على الأقل، مع حرف كبير وصغير ورقم. تُحفظ مشتقة مشفرة ولا تُحفظ كلمة المرور نفسها." : "Use at least 8 characters with upper-case, lower-case, and a number. Only a hardened hash is stored."}</p><div className="flex gap-2"><Button type="button" variant="outline" disabled={working} onClick={onBack}>{rtl ? "رجوع" : "Back"}</Button><Button disabled={working}>{rtl ? "تهيئة واختبار SQLite" : "Initialize and test SQLite"}</Button></div></form></CardContent></Card>
 }
 
 function SupabaseSetup({ language, working, connectionFound, onBack, onRun }: { language: Language; working: boolean; connectionFound: boolean; onBack: () => void; onRun: (operation: () => Promise<void>) => void }) {
