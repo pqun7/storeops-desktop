@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reset every Armory Store record and Auth identity to a first-run baseline.
+"""Reset every StoreOps Desktop record and Auth identity to a first-run baseline.
 
 The command is preview-only by default. Pass --confirm to execute the reset.
 Schema migrations are preserved. Four system currencies and one default settings
@@ -106,7 +106,7 @@ def insert_baseline(cursor: psycopg.Cursor[tuple[object, ...]]) -> None:
 
 def reset_database(cursor: psycopg.Cursor[tuple[object, ...]], tables: list[str]) -> None:
     if not tables:
-        raise RuntimeError("No Armory Store tables were found in the public schema")
+        raise RuntimeError("No StoreOps Desktop tables were found in the public schema")
     statement = sql.SQL("truncate table {} restart identity").format(
         sql.SQL(", ").join(sql.Identifier("public", table) for table in tables)
     )

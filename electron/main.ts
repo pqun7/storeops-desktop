@@ -27,6 +27,10 @@ function logBoot(stage: string): void {
 
 let mainWindow: BrowserWindow | null = null
 
+// Keep the original user-data directory so StoreOps Desktop upgrades existing
+// installations in place instead of silently starting with an empty profile.
+app.setPath("userData", path.join(app.getPath("appData"), "Armory Store"))
+
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 if (!hasSingleInstanceLock) app.quit()
 
@@ -99,7 +103,7 @@ function createWindow(): BrowserWindow {
     minWidth: 1024,
     minHeight: 700,
     show: false,
-    title: "Armory Store Management System",
+    title: "StoreOps Desktop",
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,

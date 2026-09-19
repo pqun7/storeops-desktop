@@ -32,7 +32,7 @@ then persists only public client configuration. The server key, PostgreSQL URL,
 database password, and owner password are never written to device configuration
 or logs and are never returned from Electron main to the renderer.
 
-If the selected project already contains Armory Store accounts, setup normally
+If the selected project already contains StoreOps Desktop accounts, setup normally
 requires the existing primary owner's credentials. The owner can instead opt in
 to account replacement for a project dedicated exclusively to this store. That
 explicitly confirmed operation hard-deletes every Supabase Auth user in the

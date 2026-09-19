@@ -1,6 +1,6 @@
-# Contributing to Armory Store
+# Contributing to StoreOps Desktop
 
-Thank you for helping improve Armory Store. Contributions should preserve data integrity, security boundaries, bilingual usability, and the legal-neutral nature of the project.
+Thank you for helping improve StoreOps Desktop. Contributions should preserve data integrity, security boundaries, bilingual usability, and the legal-neutral nature of the project.
 
 ## Development workflow
 

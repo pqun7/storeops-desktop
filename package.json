@@ -2,19 +2,19 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "armory-store",
   "private": true,
-  "version": "1.1.14",
+  "version": "1.2.0",
   "type": "module",
-  "description": "Armory Store Management System - Desktop ERP for weapons retailers",
-  "author": "Armory Store",
+  "description": "StoreOps Desktop - desktop ERP for serialized inventory and store operations",
+  "author": "StoreOps Desktop",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pqun7/weapons-inventory-manager.git"
+    "url": "https://github.com/pqun7/storeops-desktop.git"
   },
   "main": "dist-electron/electron/main.js",
   "build": {
     "appId": "com.armory.store",
-    "productName": "Armory Store",
-    "copyright": "Copyright © 2026 Armory Store",
+    "productName": "StoreOps Desktop",
+    "copyright": "Copyright © 2026 StoreOps Desktop",
     "directories": {
       "output": "release"
     },
@@ -41,7 +41,7 @@
           ]
         }
       ],
-      "artifactName": "Armory-Store-Setup-${version}-${arch}.${ext}"
+      "artifactName": "StoreOps-Desktop-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -50,14 +50,14 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Armory Store",
+      "shortcutName": "StoreOps Desktop",
       "deleteAppDataOnUninstall": false
     },
     "publish": [
       {
         "provider": "github",
         "owner": "pqun7",
-        "repo": "weapons-inventory-manager",
+        "repo": "storeops-desktop",
         "releaseType": "release",
         "private": false
       }
