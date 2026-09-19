@@ -34,7 +34,7 @@ export function readSmtpConfig(): SmtpConfig {
     user,
     password,
     fromEmail,
-    fromName: (process.env.SMTP_FROM_NAME?.trim() || "Armory Store").slice(0, 80),
+    fromName: (process.env.SMTP_FROM_NAME?.trim() || "StoreOps Desktop").slice(0, 80),
   }
 }
 
@@ -44,9 +44,9 @@ function encodedHeader(value: string): string {
 
 export function buildAdministratorRecoveryEmail(config: SmtpConfig, recipient: string, code: string, expiresMinutes: number): string {
   const boundary = `armory-${randomUUID()}`
-  const subject = "Armory Store password recovery code"
-  const text = `Your Armory Store administrator recovery code is: ${code}\n\nIt expires in ${expiresMinutes} minutes and can be used once. If you did not request it, ignore this message. Never share this code.`
-  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#172033"><h2>Armory Store</h2><p>Your administrator password recovery code is:</p><p style="font-size:30px;font-weight:700;letter-spacing:6px;padding:16px;background:#f3f4f6;text-align:center">${code}</p><p>This code expires in ${expiresMinutes} minutes and can be used once.</p><p style="color:#667085">If you did not request this code, ignore this message. Never share it.</p></div>`
+  const subject = "StoreOps Desktop password recovery code"
+  const text = `Your StoreOps Desktop administrator recovery code is: ${code}\n\nIt expires in ${expiresMinutes} minutes and can be used once. If you did not request it, ignore this message. Never share this code.`
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#172033"><h2>StoreOps Desktop</h2><p>Your administrator password recovery code is:</p><p style="font-size:30px;font-weight:700;letter-spacing:6px;padding:16px;background:#f3f4f6;text-align:center">${code}</p><p>This code expires in ${expiresMinutes} minutes and can be used once.</p><p style="color:#667085">If you did not request this code, ignore this message. Never share it.</p></div>`
   const domain = config.fromEmail.split("@")[1]
   return [
     `From: ${encodedHeader(config.fromName)} <${config.fromEmail}>`,
@@ -136,7 +136,7 @@ async function smtpSend(config: SmtpConfig, recipient: string, content: string):
   }
   try {
     await expect([220])
-    await command("EHLO armory-store.local", [250])
+    await command("EHLO storeops-desktop.local", [250])
     await command("AUTH LOGIN", [334])
     await command(Buffer.from(config.user).toString("base64"), [334])
     await command(Buffer.from(config.password).toString("base64"), [235])

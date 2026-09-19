@@ -116,7 +116,7 @@ function BootLoading() {
         <div className="flex h-screen items-center justify-center bg-background text-foreground">
             <div className="space-y-2 text-center">
                 <div className="mx-auto size-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
-                <p className="text-sm font-medium">Armory Store</p>
+                <p className="text-sm font-medium">StoreOps Desktop</p>
             </div>
         </div>
     )

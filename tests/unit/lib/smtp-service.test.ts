@@ -18,7 +18,7 @@ function configure() {
   process.env.SMTP_USER = "security@example.com"
   process.env.SMTP_APP_PASSWORD = "abcd efgh ijkl mnop"
   process.env.SMTP_FROM_EMAIL = "security@example.com"
-  process.env.SMTP_FROM_NAME = "Armory Store"
+  process.env.SMTP_FROM_NAME = "StoreOps Desktop"
 }
 
 describe("Gmail SMTP recovery", () => {

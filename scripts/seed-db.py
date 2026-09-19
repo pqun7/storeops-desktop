@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed a reset Armory Store database with a compact, coherent demo dataset.
+"""Seed a reset StoreOps Desktop database with a compact, coherent demo dataset.
 
 The command creates one confirmed Supabase Auth user, a protected primary Admin
 profile, master data, inventory, a supplier shipment, a customer sale, and a
@@ -238,7 +238,7 @@ def insert_demo_data(
           'Seeded partial payment'
         )
     """, (name,))
-    cursor.execute("update public.system_settings set show_demo_data = true, company_name = 'Armory Store Demo', updated_at = now() where id = 1")
+    cursor.execute("update public.system_settings set show_demo_data = true, company_name = 'StoreOps Desktop Demo', updated_at = now() where id = 1")
     cursor.executemany(
         "insert into public.business_id_counters (prefix, last_value) values (%s, %s) on conflict (prefix) do update set last_value = excluded.last_value",
         (("INV", 1), ("PAY", 1), ("SHP", 1), ("WPN", 3), ("CUS", 2), ("SUP", 1)),

@@ -354,7 +354,7 @@ async function replaceExistingApplicationAccounts(input: InitializeStoreInput): 
       "select id, is_primary_admin from public.users order by is_primary_admin desc, created_at, id",
     )
     if (!existingUsers.rowCount) {
-      throw new Error("No existing Armory Store account was found to replace")
+      throw new Error("No existing StoreOps Desktop account was found to replace")
     }
 
     // The checkbox authorizes deletion of Auth identities in this exact project.
@@ -441,8 +441,8 @@ async function configureServerCredentials(input: InitializeStoreInput): Promise<
     await client.query("begin")
     await client.query("select pg_advisory_xact_lock(hashtext($1))", [SETUP_LOCK_ID])
     for (const [name, secret, description] of [
-      ["weapon_store_project_url", input.supabaseUrl, "Armory Store project URL"],
-      ["weapon_store_service_role", input.serverKey, "Armory Store Auth administration key"],
+      ["weapon_store_project_url", input.supabaseUrl, "StoreOps Desktop project URL"],
+      ["weapon_store_service_role", input.serverKey, "StoreOps Desktop Auth administration key"],
     ] as const) {
       await client.query("delete from vault.secrets where name = $1", [name])
       await client.query("select vault.create_secret($1, $2, $3)", [secret, name, description])
@@ -549,7 +549,7 @@ export async function verifyStoreConnection(
   }
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) throw new Error("The publishable key was rejected by this Supabase project")
-    throw new Error("This Supabase project does not contain a compatible Armory Store schema")
+    throw new Error("This Supabase project does not contain a compatible StoreOps Desktop schema")
   }
   const info = await response.json() as Partial<StoreInstallationInfo>
   if (typeof info.storeName !== "string"

@@ -91,8 +91,8 @@ jobs:
         run: |
           $version = '${{ github.ref_name }}' -replace '^v', ''
           $targets = @(
-            "release/Armory-Store-Setup-$version-x64.exe"
-            'release/win-unpacked/Armory Store.exe'
+            "release/StoreOps-Desktop-Setup-$version-x64.exe"
+            'release/win-unpacked/StoreOps Desktop.exe'
           )
           foreach ($target in $targets) {
             if (-not (Test-Path -LiteralPath $target)) {
@@ -109,8 +109,8 @@ jobs:
         run: |
           $version = '${{ github.ref_name }}' -replace '^v', ''
           $assets = @(
-            "release/Armory-Store-Setup-$version-x64.exe"
-            "release/Armory-Store-Setup-$version-x64.exe.blockmap"
+            "release/StoreOps-Desktop-Setup-$version-x64.exe"
+            "release/StoreOps-Desktop-Setup-$version-x64.exe.blockmap"
             'release/latest.yml'
           )
           $lines = foreach ($asset in $assets) {
@@ -128,8 +128,8 @@ jobs:
           $tag = '${{ github.ref_name }}'
           $version = $tag -replace '^v', ''
           $assets = @(
-            "release/Armory-Store-Setup-$version-x64.exe"
-            "release/Armory-Store-Setup-$version-x64.exe.blockmap"
+            "release/StoreOps-Desktop-Setup-$version-x64.exe"
+            "release/StoreOps-Desktop-Setup-$version-x64.exe.blockmap"
             'release/latest.yml'
             'release/SHA256SUMS.txt'
           )
@@ -143,7 +143,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: armory-store-windows-${{ github.ref_name }}
+          name: storeops-desktop-windows-${{ github.ref_name }}
           path: |
             release/*.exe
             release/*.blockmap

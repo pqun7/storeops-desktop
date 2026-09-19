@@ -47,7 +47,7 @@ function sqliteIdentity(input: ExportLoginGuideInput): { accountName: string; lo
   return {
     accountName: user.name,
     loginIdentifier: user.email || user.username,
-    storeName: settings?.store_name?.trim() || "Armory Store",
+    storeName: settings?.store_name?.trim() || "StoreOps Desktop",
   }
 }
 
@@ -78,7 +78,7 @@ function englishGuide(details: {
   const connection = details.storeCode
     ? `Store connection code:\n${details.storeCode}\n`
     : "Store connection code: Not required; this account is available on the store's local device only.\n"
-  return `Login guide for ${details.storeName}\n\nStorage mode: ${storage}\nAccount name: ${details.accountName}\nLogin name/email: ${details.loginIdentifier}\nOne-time activation code: ${details.activationCode}\n${connection}\nFirst-use steps:\n1. Install and open the Armory Store application.\n2. ${details.storeCode ? "Choose cloud storage, select Join an existing store, and paste the complete store connection code." : "Open the application on the store device where this account was created; do not select a cloud database."}\n3. Enter the login name/email shown above.\n4. When first-use activation appears, enter the activation code and create your own strong password.\n5. Never share your password or activation code, and send this file only through a trusted channel.\n\nImportant:\n- The activation code is single-use and expires after 7 days.\n- This file contains no password or database key.\n- Ask the store administrator for a new code if this one expires.\n`
+  return `Login guide for ${details.storeName}\n\nStorage mode: ${storage}\nAccount name: ${details.accountName}\nLogin name/email: ${details.loginIdentifier}\nOne-time activation code: ${details.activationCode}\n${connection}\nFirst-use steps:\n1. Install and open StoreOps Desktop.\n2. ${details.storeCode ? "Choose cloud storage, select Join an existing store, and paste the complete store connection code." : "Open the application on the store device where this account was created; do not select a cloud database."}\n3. Enter the login name/email shown above.\n4. When first-use activation appears, enter the activation code and create your own strong password.\n5. Never share your password or activation code, and send this file only through a trusted channel.\n\nImportant:\n- The activation code is single-use and expires after 7 days.\n- This file contains no password or database key.\n- Ask the store administrator for a new code if this one expires.\n`
 }
 
 export async function exportLoginGuide(
@@ -91,7 +91,7 @@ export async function exportLoginGuide(
 
   let accountName = validated.accountName
   let loginIdentifier = validated.loginIdentifier
-  let storeName = "Armory Store"
+  let storeName = "StoreOps Desktop"
   let storeCode: string | null = null
   if (config.databaseProvider === "sqlite") {
     const identity = sqliteIdentity(validated)

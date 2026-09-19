@@ -25,7 +25,7 @@ async function main(): Promise<void> {
   try {
     await initDatabase()
     const administrator = configureLocalAdministrator({
-      storeName: argumentValue("store-name") ?? "Armory Store Demo",
+      storeName: argumentValue("store-name") ?? "StoreOps Desktop Demo",
       adminName: argumentValue("admin-name") ?? process.env.SEED_ADMIN_NAME ?? "Demo Admin",
       adminUsername: argumentValue("admin-username") ?? process.env.SEED_ADMIN_USERNAME ?? "demo.admin",
       adminPassword: argumentValue("admin-password") ?? process.env.SEED_ADMIN_PASSWORD ?? "Demo1234!",

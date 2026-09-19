@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for the Armory Store database maintenance commands."""
+"""Shared helpers for the StoreOps Desktop database maintenance commands."""
 
 from __future__ import annotations
 

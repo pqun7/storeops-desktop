@@ -24,6 +24,7 @@ const summary = {
 }
 
 const databaseModule = await compiled("electron/database.js")
+const { SCHEMA_VERSION } = await compiled("src/lib/db/schema.js")
 const auth = await compiled("electron/services/local-auth-service.js")
 const secureAuthStorage = await compiled("electron/services/secure-auth-storage-service.js")
 const recovery = await compiled("electron/services/password-recovery-service.js")
@@ -465,7 +466,7 @@ try {
     before.close()
     await databaseModule.initDatabase()
     const afterVersion = Number(db().pragma("user_version", { simple: true }))
-    assert.equal(afterVersion, 16)
+    assert.equal(afterVersion, SCHEMA_VERSION)
     assert.equal(tableCount("users"), beforeUsers)
     assert.equal(db().prepare("PRAGMA integrity_check").get().integrity_check, "ok")
     assert.equal(db().prepare("PRAGMA foreign_key_check").all().length, 0)

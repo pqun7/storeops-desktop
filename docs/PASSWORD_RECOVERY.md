@@ -1,6 +1,6 @@
 # Password Recovery and Gmail SMTP
 
-Armory Store uses two deliberately different recovery paths:
+StoreOps Desktop uses two deliberately different recovery paths:
 
 | Account | SQLite store | Supabase store |
 | --- | --- | --- |
@@ -19,13 +19,13 @@ For a larger production deployment, high volume, delivery analytics, or contract
 
 1. Create or select a dedicated Gmail account controlled by the store, such as `store.security@gmail.com`. Do not use a personal employee mailbox.
 2. Enable **2-Step Verification** in the Google Account security settings.
-3. Follow [Google's App Password instructions](https://support.google.com/accounts/answer/185833), create a password for Armory Store, and copy the generated 16-character value. App passwords are available only when the Google account and its organization policy allow them.
+3. Follow [Google's App Password instructions](https://support.google.com/accounts/answer/185833), create a password for StoreOps Desktop, and copy the generated 16-character value. App passwords are available only when the Google account and its organization policy allow them.
 4. Never use the normal Gmail password and never commit an App Password to Git, paste it into support messages, or expose it through a `VITE_` environment variable.
 5. If the credential is disclosed or the administrator changes, revoke the App Password immediately and issue a new one.
 
 ## Configure SQLite recovery
 
-Create a file named `.env` either beside the packaged executable or in the Armory Store user-data directory, and add:
+Create a file named `.env` either beside the packaged executable or in the legacy `Armory Store` user-data directory retained by StoreOps Desktop for upgrade compatibility, and add:
 
 ```env
 SMTP_HOST=smtp.gmail.com
@@ -33,10 +33,10 @@ SMTP_PORT=465
 SMTP_USER=store.security@gmail.com
 SMTP_APP_PASSWORD=abcdefghijklmnop
 SMTP_FROM_EMAIL=store.security@gmail.com
-SMTP_FROM_NAME=Armory Store
+SMTP_FROM_NAME=StoreOps Desktop
 ```
 
-`SMTP_FROM_EMAIL` must exactly match `SMTP_USER`; the application rejects a different sender to prevent spoofing. Restrict the file so only the Windows account that runs Armory Store can read it, then restart the application. These values are loaded only by Electron's main process and are not exposed to the renderer.
+`SMTP_FROM_EMAIL` must exactly match `SMTP_USER`; the application rejects a different sender to prevent spoofing. Restrict the file so only the Windows account that runs StoreOps Desktop can read it, then restart the application. These values are loaded only by Electron's main process and are not exposed to the renderer.
 
 The administrator's account must also have a valid recovery email in **Settings → General**. Test recovery while another administrator is still signed in, so a configuration mistake cannot lock everyone out.
 
@@ -46,8 +46,8 @@ Supabase Auth performs administrator email recovery; the application never recei
 
 1. Follow the [Supabase custom SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp). In the store's Supabase Dashboard, open **Authentication → SMTP Settings** and enable custom SMTP.
 2. Set the host to `smtp.gmail.com`, the sender/user to the dedicated Gmail address, and the password to its Google App Password. Use port `465` with implicit TLS if offered, or port `587` with STARTTLS according to the current Supabase form.
-3. Keep the sender email identical to the authenticated Gmail account and use a consistent sender name such as `Armory Store`.
-4. Open **Authentication → Email Templates → Reset Password**. The application verifies a typed OTP, so the template must visibly include the [Supabase email-template token](https://supabase.com/docs/guides/auth/auth-email-templates) variable `{{ .Token }}`. A minimal line is: `Your Armory Store verification code is {{ .Token }}`. Do not include service-role keys or other secrets.
+3. Keep the sender email identical to the authenticated Gmail account and use a consistent sender name such as `StoreOps Desktop`.
+4. Open **Authentication → Email Templates → Reset Password**. The application verifies a typed OTP, so the template must visibly include the [Supabase email-template token](https://supabase.com/docs/guides/auth/auth-email-templates) variable `{{ .Token }}`. A minimal line is: `Your StoreOps Desktop verification code is {{ .Token }}`. Do not include service-role keys or other secrets.
 5. Save the settings and send a test recovery to an administrator account. The Auth login email—not an employee's display identifier—is the delivery destination.
 
 Apply the bundled Supabase migrations before using the feature:

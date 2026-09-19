@@ -27,7 +27,7 @@ export interface InitializeStoreInput {
   ownerPassword: string
   /**
    * Explicit authorization to revoke every Supabase Auth identity in the
-   * selected project and replace the Armory Store profiles with one owner.
+   * selected project and replace the StoreOps Desktop profiles with one owner.
    * This is intentionally opt-in because it is destructive.
    */
   replaceExistingAccounts?: boolean

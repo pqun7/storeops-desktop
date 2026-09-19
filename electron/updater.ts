@@ -82,7 +82,7 @@ export function initializeAutoUpdater(
       cancelId: 1,
       noLink: true,
       title: "Update ready",
-      message: `Armory Store ${info.version} is ready to install.`,
+      message: `StoreOps Desktop ${info.version} is ready to install.`,
       detail: "Restart now to finish installing the update. If you choose Later, it will install when you close the application.",
     }
 
